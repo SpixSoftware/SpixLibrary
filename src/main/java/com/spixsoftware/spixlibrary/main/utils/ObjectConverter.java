@@ -52,10 +52,6 @@ public class ObjectConverter {
 		}
 	}
 
-	public static long nanosecondsToMiliseconds(long nanosecondsToConvert) {
-		return nanosecondsToConvert / 1000000;
-	}
-
 	public static String inputStreamToString(InputStream is) {
 
 		BufferedReader br = null;
@@ -103,11 +99,6 @@ public class ObjectConverter {
 		return false;
 	}
 
-	public static String intColorToHex(int intColor) {
-		return String.format("#%06X", 0xFFFFFF & intColor);
-	}
 
-    public static double metersToKilometers(double metters){
-        return metters/1000;
-    }
+
 }
