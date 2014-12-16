@@ -1,4 +1,4 @@
-package com.spixsoftware.spixexample.activity;
+package com.spixsoftware.spixlibrary.main.utils;
 
 /**
  * Created by Bomzas on 2014.12.14.
