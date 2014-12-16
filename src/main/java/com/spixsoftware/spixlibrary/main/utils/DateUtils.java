@@ -14,7 +14,7 @@ public class DateUtils {
 
     /** The maximum date possible. */
     public static Date MAX_DATE = new Date(Long.MAX_VALUE);
-    
+
 	/**
 	 * @return next work day. (Ignoring holidays)
 	 */
