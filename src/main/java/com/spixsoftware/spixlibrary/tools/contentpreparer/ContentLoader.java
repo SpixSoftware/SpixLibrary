@@ -1,7 +1,9 @@
 package com.spixsoftware.spixlibrary.tools.contentpreparer;
 
-public interface ContentLoader<ARGS,RESULT> {
+public interface ContentLoader<ARG, RESULT> {
 
-    public RESULT loadContent(ARGS... args);
+    public RESULT loadContent(ARG arg);
+
+    public ARG prepareArguments();
 
 }

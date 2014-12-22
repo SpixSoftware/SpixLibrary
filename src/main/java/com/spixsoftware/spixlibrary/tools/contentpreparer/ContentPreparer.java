@@ -86,7 +86,6 @@ public class ContentPreparer<ARGS, RESULT> {
         ContentLoadingTask<ARGS, RESULT> task = new ContentLoadingTask<>(id, contentLoader, listener);
         runningTasks.put(id, task);
         task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-
         if (wait) {
             try {
                 task.get();
@@ -101,6 +100,7 @@ public class ContentPreparer<ARGS, RESULT> {
         private final OnContentLoadedListener loadedListener;
         private final ContentLoader<ARGS, RESULT> loader;
         private final String id;
+        private ARGS args;
 
         public ContentLoadingTask(String id, ContentLoader<ARGS, RESULT> loader, OnContentLoadedListener loadedListener) {
             this.loader = loader;
@@ -109,8 +109,13 @@ public class ContentPreparer<ARGS, RESULT> {
         }
 
         @Override
+        protected void onPreExecute() {
+            args = loader.prepareArguments();
+        }
+
+        @Override
         protected RESULT doInBackground(ARGS... params) {
-            return loader.loadContent(params);
+            return loader.loadContent(args);
         }
 
         @Override
@@ -118,6 +123,12 @@ public class ContentPreparer<ARGS, RESULT> {
             runningTasks.remove(id);
             loadedListener.onContentLoaded(result);
         }
+    }
+
+    public static String ezFormat(Object... args) {
+        String format = new String(new char[args.length])
+                .replace("\0", "[ %s ]");
+        return String.format(format, args);
     }
 
     protected interface OnContentLoadedListener<RESULT> {
