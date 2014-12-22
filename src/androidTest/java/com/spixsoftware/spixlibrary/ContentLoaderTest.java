@@ -13,11 +13,12 @@ public class ContentLoaderTest extends ApplicationTestCase<Application> {
         super(Application.class);
     }
 
-    public void testContentProviderGetContent() {
+
+    public void testGetContent() {
 
         ContentPreparer<String, String> contentPreparer = new ContentPreparer<>();
 
-        String result = contentPreparer.getContent("1",new ContentLoader<String, String>() {
+        String result = contentPreparer.getContent("1", new ContentLoader<String, String>() {
             @Override
             public String loadContent(String s) {
                 try {
@@ -33,7 +34,84 @@ public class ContentLoaderTest extends ApplicationTestCase<Application> {
                 return "prepared";
             }
         });
-        assertEquals("result",result);
+        assertEquals("result", result);
+    }
+
+    public void testGetPreparedContent() {
+        ContentPreparer<String, String> contentPreparer = new ContentPreparer<>();
+
+        final ContentLoader<String, String> loader = new ContentLoader<String, String>() {
+            @Override
+            public String loadContent(String s) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                return "result";
+            }
+
+            @Override
+            public String prepareArguments() {
+                return "prepared";
+            }
+        };
+
+        contentPreparer.prepareContent("1", loader);
+
+        String result = contentPreparer.getContent("1", loader);
+
+        assertEquals("result", result);
+    }
+
+    public void testGetPreparedContent2() {
+        ContentPreparer<String, String> contentPreparer = new ContentPreparer<>();
+
+        final ContentLoader<String, String> loader = new ContentLoader<String, String>() {
+            @Override
+            public String loadContent(String s) {
+                return "result";
+            }
+
+            @Override
+            public String prepareArguments() {
+                return "prepared";
+            }
+        };
+
+        contentPreparer.prepareContent("1", loader);
+
+        String result = contentPreparer.getContent("1", loader);
+
+        assertEquals("result", result);
+    }
+
+    public void testGetPreparedContent3() {
+        ContentPreparer<String, String> contentPreparer = new ContentPreparer<>();
+
+        final ContentLoader<String, String> loader = new ContentLoader<String, String>() {
+            @Override
+            public String loadContent(String s) {
+                return "result";
+            }
+
+            @Override
+            public String prepareArguments() {
+                return "prepared";
+            }
+        };
+
+        contentPreparer.prepareContent("1", loader);
+
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        String result = contentPreparer.getContent("1", loader);
+
+        assertEquals("result", result);
     }
 
 }

@@ -9,7 +9,7 @@ public class ContentPreparer<ARGS, RESULT> {
 
     private final HashMap<String, ContentLoader<ARGS, RESULT>> contentLoaders = new HashMap<>();
     private final HashMap<String, RESULT> preparedContents = new HashMap<>();
-    private final HashMap<String, AsyncTask<ARGS, Void, RESULT>> runningTasks = new HashMap<>();
+    private final HashMap<String, ContentLoadingTask<ARGS, RESULT>> runningTasks = new HashMap<>();
 
 
     public RESULT getContent(String id, ContentLoader<ARGS, RESULT> contentLoader) {
@@ -39,7 +39,8 @@ public class ContentPreparer<ARGS, RESULT> {
 
     protected void waitForContentToLoad(String id) {
         try {
-            runningTasks.get(id).get();
+            ContentLoadingTask<ARGS, RESULT> task = runningTasks.get(id);
+            task.onPostExecute(task.get());
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
@@ -87,11 +88,7 @@ public class ContentPreparer<ARGS, RESULT> {
         runningTasks.put(id, task);
         task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         if (wait) {
-            try {
-                task.get();
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
-            }
+           waitForContentToLoad(id);
         }
     }
 
