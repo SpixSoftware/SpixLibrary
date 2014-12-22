@@ -5,23 +5,44 @@ import android.os.AsyncTask;
 import java.util.HashMap;
 import java.util.concurrent.ExecutionException;
 
-public abstract class ContentPreparer<ARGS, RESULT> {
+public class ContentPreparer<ARGS, RESULT> {
 
     private final HashMap<String, ContentLoader<ARGS, RESULT>> contentLoaders = new HashMap<>();
     private final HashMap<String, RESULT> preparedContents = new HashMap<>();
-    private final HashMap<String, AsyncTask<ARGS, Void, RESULT>> tasks = new HashMap<>();
+    private final HashMap<String, AsyncTask<ARGS, Void, RESULT>> runningTasks = new HashMap<>();
 
 
     public RESULT getContent(String id, ContentLoader<ARGS, RESULT> contentLoader) {
         if (isContentPrepared(id)) {
-            return preparedContents.get(id);
+            return getAndClearPreparedContent(id);
+        }
+
+        if (isContentLoading(id)) {
+            waitForContentToLoad(id);
+            return getAndClearPreparedContent(id);
         }
 
         prepareContentAndWait(id, contentLoader);
 
-        RESULT preparedConent = preparedContents.get(id);
+        return getAndClearPreparedContent(id);
+    }
+
+    protected RESULT getAndClearPreparedContent(String id) {
+        RESULT preparedContent = preparedContents.get(id);
         clearContent(id);
-        return preparedConent;
+        return preparedContent;
+    }
+
+    protected boolean isContentLoading(String id) {
+        return runningTasks.containsKey(id);
+    }
+
+    protected void waitForContentToLoad(String id) {
+        try {
+            runningTasks.get(id).get();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
     }
 
     protected boolean isContentPrepared(String id) {
@@ -35,7 +56,6 @@ public abstract class ContentPreparer<ARGS, RESULT> {
     protected void clearContent(String id) {
         contentLoaders.remove(id);
         preparedContents.remove(id);
-        tasks.remove(id);
     }
 
 
@@ -47,7 +67,11 @@ public abstract class ContentPreparer<ARGS, RESULT> {
         prepareContent(id, contentLoader, false);
     }
 
-    protected void prepareContent(final String id, ContentLoader<ARGS, RESULT> contentLoader, boolean wait) {
+
+    /**
+     * @throws IllegalArgumentException() - Content already prepared
+     */
+    protected void prepareContent(final String id, ContentLoader<ARGS, RESULT> contentLoader, boolean wait) throws IllegalArgumentException {
         if (isContentPrepared(id)) {
             throw new IllegalArgumentException("Content already prepared");
         }
@@ -60,7 +84,9 @@ public abstract class ContentPreparer<ARGS, RESULT> {
         };
 
         ContentLoadingTask<ARGS, RESULT> task = new ContentLoadingTask<>(id, contentLoader, listener);
+        runningTasks.put(id, task);
         task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+
         if (wait) {
             try {
                 task.get();
@@ -89,6 +115,7 @@ public abstract class ContentPreparer<ARGS, RESULT> {
 
         @Override
         protected void onPostExecute(RESULT result) {
+            runningTasks.remove(id);
             loadedListener.onContentLoaded(result);
         }
     }
